@@ -56,15 +56,15 @@ input, select {
       <option value="price">Sort by price</option>
     </select>
     <input type="submit" value="►">
-    <div id="info">&uarr; Please allow opening pop-ups!</div>
+    <div id="info">&uarr; Please allow opening pop-ups and refresh!</div>
   </form>
   <div id="nomobile">Sorry! Multi Pane Search doesn't work in mobile web browsers.</div>
   <script>
 var sites = {
   'Latest news': [{
-    url: 'https://startpage.com/sp/search?query={QUERY}&cat=web&with_date=m'
+    url: 'https://searx.be/search?q={QUERY}&language=all&time_range=month'
   }, {
-    url: 'https://startpage.com/sp/search?query={QUERY}&cat=news'
+    url: 'https://searx.be/search?q={QUERY}&language=all&categories=news'
   }, {
     url: 'https://www.reddit.com/search/?q={QUERY}&t=month&type=link'
   }, {
