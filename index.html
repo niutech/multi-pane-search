@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Multi-Pane Search</title>
+  <style>
+body {
+  margin: 0;
+  padding: 0;
+  font: 14px "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+#search {
+  margin: 10px;
+}
+h1 {
+  float: left;
+  margin: 0 10px;
+  font-size: 18px;
+}
+input, select {
+  height: 20px;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+}
+#info {
+  display: none;
+  float: right;
+  font-weight: bold;
+}
+#nomobile {
+  display: none;
+}
+
+@media only screen and (max-device-width: 768px) {
+  h1 {
+    float: none;
+  }
+  #search {
+    display: none;
+  }
+  #nomobile {
+    display: block;
+  }
+}
+  </style>
+</head>
+<body>
+  <h1>Multi-Pane Search</h1>
+  <form id="search">
+    <select id="group"></select>
+    <input id="query" type="search" value="" size="25" placeholder="Search..." autofocus>
+    <select id="sort">
+      <option value="">Sort by default</option>
+      <option value="price">Sort by price</option>
+    </select>
+    <input type="submit" value="►">
+    <div id="info">&uarr; Please allow opening pop-ups!</div>
+  </form>
+  <div id="nomobile">Sorry! Multi Pane Search doesn't work in mobile web browsers.</div>
+  <script>
+var sites = {
+  'Latest news': [{
+    url: 'https://startpage.com/sp/search?query={QUERY}&cat=web&with_date=m'
+  }, {
+    url: 'https://startpage.com/sp/search?query={QUERY}&cat=news'
+  }, {
+    url: 'https://www.reddit.com/search/?q={QUERY}&t=month&type=link'
+  }, {
+    url: 'https://mobile.twitter.com/search?q={QUERY}'
+/*}, {
+    url: 'https://m.facebook.com/search/posts/?q={QUERY}'
+*/}],
+  'Shopping Polish': [{
+    url: 'https://allegro.pl/listing?string={QUERY}', sortByPrice: '&order=d'
+  }, {
+    url: 'https://www.olx.pl/oferty/q-{QUERY_DASH}/', sortByPrice: '?search%5Border%5D=filter_float_price%3Aasc'
+  }, {
+    url: 'https://m.ceneo.pl/;szukaj-{QUERY}', sortByPrice: ';0112-0.htm'
+  }, {
+    url: 'https://www.ebay.pl/sch/i.html?_nkw={QUERY}&LH_PrefLoc=2', sortByPrice: '&_sop=15'
+/*}, {
+    url: 'https://www.amazon.pl/s?k={QUERY}', sortByPrice: '&s=price-asc-rank'
+*/}],
+  'Shopping Global': [{
+    url: 'https://www.amazon.com/gp/anywhere/site-view.html?opt=access&url=%2Fs%3Fk%3D{QUERY}', sortByPrice: '%26s%3Dprice-asc-rank'
+  }, {
+    url: 'https://www.ebay.com/sch/i.html?_nkw={QUERY}&LH_PrefLoc=2', sortByPrice: '&_sop=15'
+  }, {
+    url: 'https://m.aliexpress.com/wholesale/{QUERY}.html?style=list', sortByPrice: '&sortType=price&sortOrder=asc'
+  }]
+};
+var params;
+var selected;
+var group = document.getElementById('group');
+var query = document.getElementById('query');
+var sort = document.getElementById('sort');
+var info = document.getElementById('info');
+var windows = [];
+
+var openPopup = (url, i, total) => {
+    var win = open(url, 'pane' + i, 'top=225,left=' + Math.floor((screen.width - 16) * i / total) + ',width=' + Math.floor((screen.width - 16) / total) + ',height=' + (screen.height - 225) + ',location=no,toolbar=no,menubar=no,status=no');
+    if (win) windows[i] = win;
+    else info.style.display = 'block';
+};
+
+var addGroups = () => {
+    var options = '';
+    Object.keys(sites).forEach(s => {
+        options += '<option' + (s == selected ? ' selected' : '') + '>' + s + '</option>';
+    });
+    group.innerHTML = options;
+};
+addGroups();
+
+var search = () => {
+    params = new URLSearchParams(location.hash.substring(1));
+    selected = params.get('g') || 'Latest news';
+    var s = params.get('s') || '';
+    var q = params.get('q') || '';
+    var selectedSite = sites[selected];
+    group.value = selected;
+    sort.value = s;
+    query.value = q;
+    if (!q || !selectedSite) return;
+    if (opener) {
+        if (selectedSite.length != windows.length) {
+            windows.forEach(w => w.close());
+            windows.length = selectedSite.length;
+        }
+        selectedSite.forEach((site, i) => openPopup(site.url.replace('{QUERY}', q).replace('{QUERY_DASH}', q.replace(/%20/g, '-')) + (sort.value == 'price' ? site.sortByPrice : ''), i, selectedSite.length));
+    } else if (!open(location.href, 'multipanesearch', 'top=0,left=0,width=' + screen.width + ',height=85,resizable=no,scrollbars=no,location=no,toolbar=no,menubar=no,status=no'))
+        info.style.display = 'block';
+};
+window.addEventListener('hashchange', search);
+search();
+
+var setSort = () => {
+    selected = group.value;
+    if (sites[selected][0].sortByPrice)
+        sort.style.display = '';
+    else {
+        sort.style.display = 'none';
+        sort.value = '';
+    }
+};
+group.addEventListener('change', setSort);
+setSort();
+
+document.getElementById('search').addEventListener('submit', e => {
+    e.preventDefault();
+    location.hash = 'g=' + encodeURIComponent(selected) + '&q=' + encodeURIComponent(query.value.trim()) + (sort.value ? '&s=' + encodeURIComponent(sort.value) : '');
+});
+
+window.addEventListener('beforeunload', () => windows.forEach(w => w.close()));
+  </script>
+</body>
+</html>
