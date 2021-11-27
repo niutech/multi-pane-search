@@ -24,6 +24,9 @@ input, select {
   vertical-align: middle;
   border: 1px solid #ccc;
 }
+#show {
+  float: right;
+}
 #info {
   display: none;
   float: right;
@@ -55,7 +58,8 @@ input, select {
       <option value="">Sort by default</option>
       <option value="price">Sort by price</option>
     </select>
-    <input type="submit" value="►">
+    <input type="submit" value="►" title="Search">
+    <input type="button" id="show" value="🗔" title="Show all windows">
     <div id="info">&uarr; Please allow opening pop-ups and refresh!</div>
   </form>
   <div id="nomobile">Sorry! Multi Pane Search doesn't work in mobile web browsers.</div>
@@ -154,6 +158,8 @@ document.getElementById('search').addEventListener('submit', e => {
     e.preventDefault();
     location.hash = 'g=' + encodeURIComponent(selected) + '&q=' + encodeURIComponent(query.value.trim()) + (sort.value ? '&s=' + encodeURIComponent(sort.value) : '');
 });
+
+document.getElementById('show').addEventListener('click', () => windows.forEach(w => w.focus()));
 
 window.addEventListener('beforeunload', () => windows.forEach(w => w.close()));
   </script>
